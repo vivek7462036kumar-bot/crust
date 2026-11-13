@@ -67,7 +67,7 @@ export default function HomePage() {
 
   return (
     <div className="space-y-12">
-      
+
       {/* 1. Hero Banner with Embedded Live Wood-Fired Video */}
       <HeroSection onOpenCustomizer={() => setCustomizerOpen(true)} />
 
@@ -101,7 +101,7 @@ export default function HomePage() {
 
       {/* 4. Main Menu Explorer with Pizzas In Kraft Boxes */}
       <section id="menu" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 pt-4">
-        
+
         {/* Category Heading & Box Notice */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 border-b border-zinc-800/80 pb-4">
           <div>
