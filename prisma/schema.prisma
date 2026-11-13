@@ -1,0 +1,125 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x", "rhel-openssl-3.0.x", "debian-openssl-1.1.x", "debian-openssl-3.0.x"]
+}
+
+model MenuItem {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  description String
+  price       Float
+  category    String      // PIZZA, SIDE, DRINK, DESSERT
+  imageUrl    String
+  badges      String      // Comma-separated: VEGETARIAN, VEGAN, SPICY, CHEF_SPECIAL
+  inStock     Boolean     @default(true)
+  isFeatured  Boolean     @default(false)
+  baseSize    String?     // e.g. "12 inch"
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+model CustomIngredient {
+  id         String   @id @default(uuid())
+  name       String
+  category   String   // SIZE, CRUST, SAUCE, CHEESE, TOPPING_MEAT, TOPPING_VEG, TOPPING_FINISH
+  price      Float    @default(0.0)
+  multiplier Float    @default(1.0)
+  isDefault  Boolean  @default(false)
+  inStock    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
+
+model PromoCode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountPercent Float    @default(0.0)
+  discountAmount  Float    @default(0.0)
+  minOrder        Float    @default(0.0)
+  description     String
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
+
+model Order {
+  id                   String      @id
+  customerName         String
+  customerEmail        String
+  customerPhone        String
+  orderType            String      // DELIVERY | PICKUP
+  deliveryAddress      String?
+  deliveryInstructions String?
+  pickupTime           String?
+  status               String      @default("RECEIVED") // RECEIVED | PREPARING | BAKING | OUT_FOR_DELIVERY | DELIVERED | CANCELLED
+  paymentMethod        String      // CARD | COD | UPI
+  paymentStatus        String      @default("PAID")     // PAID | PENDING
+  subtotal             Float
+  discount             Float       @default(0.0)
+  deliveryFee          Float       @default(0.0)
+  tax                  Float       @default(0.0)
+  total                Float
+  promoCode            String?
+  notes                String?
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+  items                OrderItem[]
+}
+
+model OrderItem {
+  id          String    @id @default(uuid())
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId  String?
+  menuItem    MenuItem? @relation(fields: [menuItemId], references: [id])
+  name        String
+  isCustom    Boolean   @default(false)
+  size        String?
+  crust       String?
+  sauce       String?
+  cheese      String?
+  toppings    String?   // JSON stringified array of toppings
+  quantity    Int       @default(1)
+  unitPrice   Float
+  totalPrice  Float
+  itemNotes   String?
+}
+
+model Reservation {
+  id            String   @id
+  customerName  String
+  customerEmail String
+  customerPhone String
+  date          String   // e.g. "2026-11-20"
+  timeSlot      String   // e.g. "7:30 PM"
+  partySize     Int      @default(2)
+  seatingArea   String   // HEARTH_SIDE | PATIO | MAIN_DINING
+  notes         String?
+  status        String   @default("CONFIRMED") // CONFIRMED | SEATED | CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  code      String?
+  createdAt DateTime @default(now())
+}
+
+model ContactInquiry {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String?
+  subject     String
+  message     String
+  inquiryType String   @default("GENERAL") // CATERING | PRIVATE_EVENT | FEEDBACK
+  status      String   @default("NEW")
+  createdAt   DateTime @default(now())
+}
