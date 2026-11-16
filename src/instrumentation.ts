@@ -25,3 +25,4 @@ export async function register() {
     console.log(`[Instrumentation] Observability ready. Active FAULT_MODE="${faultMode}".`);
   }
 }
+

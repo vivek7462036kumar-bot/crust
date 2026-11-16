@@ -179,3 +179,4 @@ curl -s http://localhost:3000/api/health | jq .
 
 - **Vercel vs. Docker Deployment:**
   The repository retains `vercel.json` for frontend previewing. However, SQLite writes are non-persistent on serverless lambda platforms. For full write persistence and AIOps observability, deploy via the provided multi-stage `Dockerfile` and `docker-compose.crust.yml`.
+

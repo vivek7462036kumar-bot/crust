@@ -82,3 +82,4 @@ export function getRollingMetrics(): {
 export function resetMetrics(): void {
   requestHistory.length = 0;
 }
+

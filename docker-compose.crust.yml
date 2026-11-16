@@ -36,3 +36,4 @@ networks:
   aiops-network:
     name: ${AIOPS_NETWORK:-aiops-network}
     external: true
+
