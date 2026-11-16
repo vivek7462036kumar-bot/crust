@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@/lib/types';
+import { withReporting } from '@/lib/withReporting';
+import { checkFault } from '@/lib/faults';
 
 const STATUS_CYCLE: OrderStatus[] = [
   'RECEIVED',
@@ -10,11 +12,14 @@ const STATUS_CYCLE: OrderStatus[] = [
   'DELIVERED',
 ];
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+export const GET = withReporting(
+  'crust-orders',
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
+    checkFault('orders_get');
+
     const { id } = params;
 
     const order = await prisma.order.findUnique({
@@ -32,20 +37,16 @@ export async function GET(
     }
 
     return NextResponse.json({ order });
-  } catch (error: any) {
-    console.error('Error fetching order:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve order', details: error.message },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { defaultErrorMessage: 'Failed to retrieve order' }
+);
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+export const PATCH = withReporting(
+  'crust-orders',
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
     const { id } = params;
     const body = await request.json();
 
@@ -91,12 +92,6 @@ export async function PATCH(
       success: true,
       order: updated,
     });
-  } catch (error: any) {
-    console.error('Error updating order status:', error);
-    return NextResponse.json(
-      { error: 'Failed to update order status', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to update order' }
+);

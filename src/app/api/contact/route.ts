@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withReporting(
+  'crust-web',
+  async (request: NextRequest) => {
     const { name, email, phone, subject, message, inquiryType } = await request.json();
 
     if (!name || !email || !message) {
@@ -29,11 +31,6 @@ export async function POST(request: NextRequest) {
       message: 'Thank you for reaching out! Our hearth coordinator will contact you within 24 hours.',
       inquiryId: inquiry.id,
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Failed to submit inquiry', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to submit inquiry' }
+);

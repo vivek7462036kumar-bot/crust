@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  crust:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: crust-ember-app
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-file:./dev.db}
+      - AIOPS_WEBHOOK_URL=${AIOPS_WEBHOOK_URL:-http://api:8000/api/v1/webhooks/generic}
+      - AIOPS_REPORTING_ENABLED=${AIOPS_REPORTING_ENABLED:-true}
+      - APP_ENV=${APP_ENV:-production}
+      - FAULT_MODE=${FAULT_MODE:-none}
+      - FAULT_ENDPOINTS_ENABLED=${FAULT_ENDPOINTS_ENABLED:-true}
+      - FAULT_ADMIN_TOKEN=${FAULT_ADMIN_TOKEN}
+      - MEMORY_ALERT_MB=${MEMORY_ALERT_MB:-200}
+      - LATENCY_THRESHOLD_MS=${LATENCY_THRESHOLD_MS:-3000}
+      - DELIVERY_QUOTE_URL=${DELIVERY_QUOTE_URL:-http://delivery-service:8080/quote}
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+    networks:
+      - aiops-network
+
+networks:
+  aiops-network:
+    name: ${AIOPS_NETWORK:-aiops-network}
+    external: true

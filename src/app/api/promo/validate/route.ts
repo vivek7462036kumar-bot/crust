@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withReporting(
+  'crust-web',
+  async (request: NextRequest) => {
     const { code, subtotal } = await request.json();
 
     if (!code) {
@@ -48,12 +50,6 @@ export async function POST(request: NextRequest) {
       discountTotal,
       description: promo.description,
     });
-  } catch (error: any) {
-    console.error('Error validating promo:', error);
-    return NextResponse.json(
-      { valid: false, message: 'Server error while checking promo code.' },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Server error while checking promo code.' }
+);

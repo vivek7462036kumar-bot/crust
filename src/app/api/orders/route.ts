@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
+import { checkFault } from '@/lib/faults';
+import { getDeliveryQuote } from '@/lib/deliveryQuote';
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withReporting(
+  'crust-orders',
+  async (request: NextRequest) => {
+    checkFault('orders_get');
+
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
@@ -22,17 +28,15 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json({ orders });
-  } catch (error: any) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to retrieve orders', details: error.message },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { defaultErrorMessage: 'Failed to retrieve orders' }
+);
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withReporting(
+  'crust-orders',
+  async (request: NextRequest) => {
+    checkFault('orders_post');
+
     const body = await request.json();
     const {
       customerName,
@@ -110,10 +114,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Delivery fee
+    // Delivery fee (via downstream quote client with fallback / slow_downstream fault simulation)
     let deliveryFee = 0;
     if (orderType === 'DELIVERY') {
-      deliveryFee = subtotal >= 25.0 ? 0 : 3.99;
+      const quote = await getDeliveryQuote(subtotal);
+      deliveryFee = quote.deliveryFee;
     }
 
     // Tax (8% on discounted subtotal)
@@ -156,17 +161,14 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      orderId: newOrder.id,
-      order: newOrder,
-    }, { status: 201 });
-  } catch (error: any) {
-    console.error('Error placing order:', error);
     return NextResponse.json(
-      { error: 'Failed to place order', details: error.message },
-      { status: 500 }
+      {
+        success: true,
+        orderId: newOrder.id,
+        order: newOrder,
+      },
+      { status: 201 }
     );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to place order' }
+);

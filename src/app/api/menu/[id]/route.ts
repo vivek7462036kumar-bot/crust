@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+export const PATCH = withReporting(
+  'crust-menu',
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
     const { id } = params;
     const body = await request.json();
 
@@ -25,31 +27,21 @@ export async function PATCH(
     });
 
     return NextResponse.json(updated);
-  } catch (error: any) {
-    console.error('Error updating menu item:', error);
-    return NextResponse.json(
-      { error: 'Failed to update menu item', details: error.message },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { defaultErrorMessage: 'Failed to update menu item' }
+);
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+export const DELETE = withReporting(
+  'crust-menu',
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
     const { id } = params;
     await prisma.menuItem.delete({
       where: { id },
     });
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error('Error deleting menu item:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete menu item', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to delete menu item' }
+);

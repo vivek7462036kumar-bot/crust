@@ -1,22 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withReporting(
+  'crust-web',
+  async () => {
     const reservations = await prisma.reservation.findMany({
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json({ reservations });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Failed to fetch reservations', details: error.message },
-      { status: 500 }
-    );
-  }
-}
+  },
+  { defaultErrorMessage: 'Failed to fetch reservations' }
+);
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withReporting(
+  'crust-web',
+  async (request: NextRequest) => {
     const body = await request.json();
     const {
       customerName,
@@ -61,12 +60,6 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
-    console.error('Error booking reservation:', error);
-    return NextResponse.json(
-      { error: 'Failed to complete reservation', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to create reservation' }
+);

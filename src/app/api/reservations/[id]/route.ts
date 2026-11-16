@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
+export const PATCH = withReporting(
+  'crust-web',
+  async (
+    request: NextRequest,
+    { params }: { params: { id: string } }
+  ) => {
     const { id } = params;
     const body = await request.json();
 
@@ -17,11 +19,6 @@ export async function PATCH(
     });
 
     return NextResponse.json({ success: true, reservation: updated });
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: 'Failed to update reservation', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to update reservation' }
+);

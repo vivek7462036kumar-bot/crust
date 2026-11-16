@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withReporting } from '@/lib/withReporting';
 
-export async function POST(request: NextRequest) {
-  try {
+export const POST = withReporting(
+  'crust-web',
+  async (request: NextRequest) => {
     const { email } = await request.json();
 
     if (!email || !email.includes('@')) {
@@ -41,11 +43,6 @@ export async function POST(request: NextRequest) {
       message: 'You have joined The Ember Society! Enjoy 15% off your next feast with code EMBERSOCIETY15',
       promoCode: 'EMBERSOCIETY15',
     });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, message: 'Failed to join VIP Society', details: error.message },
-      { status: 500 }
-    );
-  }
-}
-
+  },
+  { defaultErrorMessage: 'Failed to join VIP Society' }
+);
